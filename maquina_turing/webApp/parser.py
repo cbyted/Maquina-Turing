@@ -1,4 +1,5 @@
-from re import search, findall
+from re import search
+from machine import TuringMachine
 
 # Archivos .mt válidos
 valid_machines = {
@@ -10,17 +11,26 @@ valid_machines = {
     "suma-dos-numeros.mt"
 }
 
+def strip_parsing(data):
+    data = [item.strip() for item in data]
+    return data
+
 # Convertir las transiciones a tuplas
 def parse_transition(line, dictionary):
-    current_state = tuple(search(r"(.*)\s->", line).group(1).split(","))
-    transition = tuple(search(r"->\s*(.*)", line).group(1).split(","))
-    dictionary[current_state] = transition
+    current_state = search(r"(.*)\s->", line).group(1).split(",")
+    transition = search(r"->\s*(.*)", line).group(1).split(",")
+    
+    stripped_current_state = strip_parsing(current_state)
+    stripped_transition = strip_parsing(transition)
+
+    dictionary[tuple(stripped_current_state)] = tuple(stripped_transition)
 
 # Parsing de los demas datos
 def general_parsing(line):
     data = search(r":\s*(.*)", line).group(1).split(",")
     if len(data) > 0:
-        return data
+        stripped_data = strip_parsing(data)
+        return stripped_data
     else:
         return None
         
@@ -28,6 +38,8 @@ def general_parsing(line):
 def parsing_mt_file(selected_file):
     try:
         parsed_file = {}
+        transitions = {}
+
         in_transitions = False
 
         if selected_file not in valid_machines:
@@ -40,8 +52,8 @@ def parsing_mt_file(selected_file):
 
                     for line in mt:
                         if in_transitions:
-                            parse_transition(line, parsed_file)
-                            
+                            parse_transition(line, transitions)    
+                        
                         if "Estados" in line:
                             states = general_parsing(line)
                             if states is not None:
@@ -81,6 +93,8 @@ def parsing_mt_file(selected_file):
                         elif "Transiciones" in line:
                             in_transitions = True 
                     mt.close()    
+
+                    parsed_file["transitions"] = transitions
                     return parsed_file
             except FileNotFoundError:
                 print("[!] Error: Archivo no encontrado")
@@ -90,11 +104,30 @@ def parsing_mt_file(selected_file):
 def show_parsed_file(dictionary):
     print("\n[*] Resultado del diccionario tras el parsing")
     for key in dictionary:
-        print(f"{key} : {dictionary[key]}")
+        if key == "transitions":
+            print(f"{key}:")
+            for transition in dictionary[key]:
+                print(f"{transition} : {dictionary[key][transition]}")
+        else:
+            print(f"{key} : {dictionary[key]}")
 
 def main():
     file_dict = parsing_mt_file("termina-en-aa.mt")
     show_parsed_file(file_dict)
+    
+    # Crear maquina de turing
+    mt_simulator = TuringMachine(
+        file_dict["states"],
+        file_dict["input_alphabet"],
+        file_dict["tape_alphabet"],
+        file_dict["initial_state"],
+        file_dict["final_states"],
+        file_dict["blank_symbol"],    
+        file_dict["transitions"]
+    )
+    
+    mt_simulator.show_machine()
+    mt_simulator.step()
 
 if __name__ == "__main__":
     main()
