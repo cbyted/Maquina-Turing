@@ -35,11 +35,11 @@ class TuringMachine:
 
         if (self.current, symbol) in self.transitions:
             new_state, write_sym, move = self.transitions[(self.current, symbol)]
+
+            print(f"Current transition: {(self.current, symbol)} : {(new_state, write_sym, move)}\n")
+
             if (self.head < len(self.tape_alphabet)):
-                if (symbol == 'B'):
-                    self.tape_alphabet[self.head] = ' '
-                else:
-                    self.tape_alphabet[self.head] = write_sym   
+                self.tape_alphabet[self.head] = write_sym   
             else:
                 self.tape_alphabet.append(write_sym)
 
@@ -54,12 +54,14 @@ class TuringMachine:
         else:
             self.current = "REJECT"
 
-    def run(self):
-        while self.current != self.final_state and self.current != "REJECT":
-            self.step()
-        return self.current == self.final_state
-    
     def display_tape(self):
         tape_view = ''.join(self.tape_alphabet).rstrip()
-        print(f"Tape: {tape_view}")
+        print(f"\nTape: {tape_view}")
         print(f"Head: {' ' * self.head + '^'}")
+        print(f"State: {self.current}")
+
+    def run(self):
+        while self.current != self.final_state and self.current != "REJECT":
+            self.display_tape()
+            self.step()
+        return self.current == self.final_state

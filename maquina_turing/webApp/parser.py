@@ -112,7 +112,7 @@ def show_parsed_file(dictionary):
             print(f"{key} : {dictionary[key]}")
 
 def main():
-    file_dict = parsing_mt_file("palindromo-binario.mt")
+    file_dict = parsing_mt_file("termina-en-aa.mt")
     show_parsed_file(file_dict)
     
     # Crear maquina de turing
@@ -127,8 +127,15 @@ def main():
     )
     
     print("\n[*] Running the tape:")
-    mt_simulator.run()
+    result = mt_simulator.run()
+    if result == True:
+        print("Accepted")
+    else:
+        print("Rejected")
+
+    print("\nFinal result:")
     mt_simulator.display_tape()
+
 
 if __name__ == "__main__":
     main()
