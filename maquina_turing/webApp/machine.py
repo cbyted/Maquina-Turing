@@ -3,12 +3,12 @@ class Tape:
     blank = ""
 
 class TuringMachine:
-    def __init__(self, states, input_alphabet, tape_alphabet, initial_state, final_states, blank_sym, transitions): 
+    def __init__(self, states, input_alphabet, tape_alphabet, initial_state, final_state, blank_sym, transitions): 
         self.states = states
         self.input_alphabet = input_alphabet
         self.tape_alphabet = tape_alphabet
         self.initial_state = initial_state
-        self.final_states = final_states
+        self.final_state = final_state
         self.blank_sym = blank_sym
         self.transitions = transitions
         self.head = 0
@@ -21,21 +21,45 @@ class TuringMachine:
         print(f"[*] Alfabeto: {self.input_alphabet}")
         print(f"[*] Cinta: {self.tape_alphabet}")
         print(f"[*] Estado inicial: {self.initial_state}")
-        print(f"[*] Estados finales: {self.final_states}")
-        print(f"[*] Simbolos vacios: {self.blank_sym}")
+        print(f"[*] Estados aceptación: {self.final_state}")
+        print(f"[*] Blank: {self.blank_sym}")
         print(f"[*] Transiciones: {self.transitions}")
+        print(f"[*] Head: {self.head}")
+        print(f"[*] Current state: {self.current}")
 
     def step(self):
         if self.head < len(self.tape_alphabet):
             symbol = self.tape_alphabet[self.head] 
         else:
-            symbol = ''
+            symbol = ' '
 
         if (self.current, symbol) in self.transitions:
             new_state, write_sym, move = self.transitions[(self.current, symbol)]
-            print(f"{new_state} {write_sym} {move}")
             if (self.head < len(self.tape_alphabet)):
-                self.tape_alphabet[self.head] = write_sym
+                if (symbol == 'B'):
+                    self.tape_alphabet[self.head] = ' '
+                else:
+                    self.tape_alphabet[self.head] = write_sym   
+            else:
+                self.tape_alphabet.append(write_sym)
+
+            if move == 'R':
+                self.head +=1
+            elif move == 'L':
+                self.head -= 1
+                if self.head < 0:
+                    self.tape_alphabet.insert(0, ' ')
+
+            self.current = new_state
+        else:
+            self.current = "REJECT"
 
     def run(self):
-        return
+        while self.current != self.final_state and self.current != "REJECT":
+            self.step()
+        return self.current == self.final_state
+    
+    def display_tape(self):
+        tape_view = ''.join(self.tape_alphabet).rstrip()
+        print(f"Tape: {tape_view}")
+        print(f"Head: {' ' * self.head + '^'}")
