@@ -1,7 +1,6 @@
 from re import search
 from machine import TuringMachine
 
-# Archivos .mt válidos
 valid_machines = {
     "lenguaje-no-regular.mt",
     "palindromo-binario.mt",
@@ -15,7 +14,6 @@ def strip_parsing(data):
     data = [item.strip() for item in data]
     return data
 
-# Convertir las transiciones a tuplas
 def parse_transition(line, dictionary):
     current_state = search(r"(.*)\s->", line).group(1).split(",")
     transition = search(r"->\s*(.*)", line).group(1).split(",")
@@ -25,7 +23,6 @@ def parse_transition(line, dictionary):
 
     dictionary[tuple(stripped_current_state)] = tuple(stripped_transition)
 
-# Parsing de los demas datos
 def general_parsing(line):
     data = search(r":\s*(.*)", line).group(1).split(",")
     if len(data) > 0:
@@ -33,8 +30,7 @@ def general_parsing(line):
         return stripped_data
     else:
         return None
-        
-# Crear un diccionario con los datos obtenidos
+
 def parsing_mt_file(selected_file):
     try:
         parsed_file = {}
@@ -114,8 +110,7 @@ def show_parsed_file(dictionary):
 def main():
     file_dict = parsing_mt_file("termina-en-aa.mt")
     show_parsed_file(file_dict)
-    
-    # Crear maquina de turing
+
     mt_simulator = TuringMachine(
         file_dict["states"],
         file_dict["input_alphabet"],
