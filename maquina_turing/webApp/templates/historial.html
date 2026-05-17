@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static %}
+ 
+{% block title %}Historial{% endblock %}
+{% block nav_historial %}active{% endblock %}
+ 
+{% block content %}
+ 
+<div class="page-header">
+    <h1 class="page-title">Historial de <span class="highlight">ejecuciones</span></h1>
+    <p class="page-subtitle">Registro de todas las simulaciones realizadas en esta sesión.</p>
+</div>
+ 
+{% if ejecuciones %}
+<div class="card">
+    <div class="card-title">Ejecuciones registradas ({{ ejecuciones|length }})</div>
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Máquina</th>
+                    <th>Cadena</th>
+                    <th>Resultado</th>
+                    <th>Pasos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ej in ejecuciones %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ forloop.counter }}</td>
+                    <td>{{ ej.maquina }}</td>
+                    <td class="sym">{{ ej.cadena }}</td>
+                    <td>
+                        {% if ej.resultado == 'aceptada' %}
+                            <span style="color: var(--accent-green); font-weight: 600;">✓ Aceptada</span>
+                        {% elif ej.resultado == 'rechazada' %}
+                            <span style="color: var(--accent-red); font-weight: 600;">✕ Rechazada</span>
+                        {% else %}
+                            <span style="color: var(--accent-yellow); font-weight: 600;">⚠ Límite</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--text-secondary);">{{ ej.pasos }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+ 
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        <div class="empty-state-icon">◷</div>
+        <div class="empty-state-text">
+            Aún no hay ejecuciones registradas.<br>
+            Carga una máquina y simula una cadena para verlas aquí.
+        </div>
+        <br>
+        <a href="{% url 'cargar' %}" class="btn btn-primary">Cargar máquina</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
