@@ -1,3 +1,4 @@
+from time import sleep
 
 class TuringMachine:
     def __init__(self, states, input_alphabet, tape_alphabet, initial_state, final_state, blank_sym, transitions, tape=""): 
@@ -24,17 +25,21 @@ class TuringMachine:
         print(f"[*] Transiciones: {self.transitions}")
         print(f"[*] Head: {self.head}")
         print(f"[*] Current state: {self.current}")
+        print(f"[*] Tape: {self.tape}")
 
     def step(self):
-        if self.head < len(self.tape_alphabet):
+        if self.head < len(self.tape):
             symbol = self.tape[self.head] 
         else:
-            symbol = ' '
+            symbol = self.blank_sym
 
         if (self.current, symbol) in self.transitions:
             new_state, write_sym, move = self.transitions[(self.current, symbol)]
 
-            print(f"Current transition: {(self.current, symbol)} : {(new_state, write_sym, move)}\n")
+            if write_sym not in self.tape_alphabet:
+                raise ValueError(f"[!] Error: Símbolo '{write_sym}' no permitido en la cinta")
+            
+            print(f"Transición actual: {(self.current, symbol)} : {(new_state, write_sym, move)}\n")
 
             if (self.head < len(self.tape_alphabet)):
                 self.tape[self.head] = write_sym   
@@ -46,7 +51,8 @@ class TuringMachine:
             elif move == 'L':
                 self.head -= 1
                 if self.head < 0:
-                    self.tape.insert(0, ' ')
+                    self.tape.insert(0, self.blank_sym)
+                    self.head = 0
 
             self.current = new_state
         else:
@@ -62,4 +68,5 @@ class TuringMachine:
         while self.current != self.final_state and self.current != "REJECT":
             self.display_tape()
             self.step()
+            sleep(1)
         return self.current == self.final_state

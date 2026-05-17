@@ -108,8 +108,7 @@ def show_parsed_file(dictionary):
             print(f"{key} : {dictionary[key]}")
 
 def main():
-    file_dict = parsing_mt_file("termina-en-aa.mt")
-    show_parsed_file(file_dict)
+    file_dict = parsing_mt_file("duplicadora-de-unos.mt")
 
     mt_simulator = TuringMachine(
         file_dict["states"],
@@ -119,19 +118,22 @@ def main():
         file_dict["final_states"][0],
         file_dict["blank_symbol"][0],    
         file_dict["transitions"],
-        tape="aaabbaa"
+        tape="11111"
     )
-    
-    print("\n[*] Running the tape:")
-    result = mt_simulator.run()
-    if result == True:
-        print("Accepted")
-    else:
-        print("Rejected")
+    try:
+        mt_simulator.show_machine()
 
-    print("\nFinal result:")
-    mt_simulator.display_tape()
+        print("\n[*] Running the tape:")
+        result = mt_simulator.run()
+        if result == True:
+            print("Accepted")
+        else:
+            print("Rejected")
 
+        print("\nFinal result:")
+        mt_simulator.display_tape()
+    except Exception as e:
+        print(f"{e}")
 
 if __name__ == "__main__":
     main()
