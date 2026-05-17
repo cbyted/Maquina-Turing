@@ -14,7 +14,6 @@ def inicializar_cinta(cadena, simbolo_blanco):
 def leer_cinta(cinta, pos, simbolo_blanco):
     return cinta.get(pos, simbolo_blanco)
  
- 
 def ejecutar_paso(estado, cinta, cabezal, transiciones, simbolo_blanco):
     simbolo = leer_cinta(cinta, cabezal, simbolo_blanco)
     clave = (estado, simbolo)
