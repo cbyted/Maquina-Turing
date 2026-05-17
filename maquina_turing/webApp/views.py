@@ -83,6 +83,22 @@ def transiciones_to_list(transiciones):
         })
     return sorted(lista, key=lambda x: (x['from_state'], x['read']))
 
+def ejecutar_un_paso(estado, cinta, cabezal, transiciones, blank, paso, historial, finals):
+    nuevo_estado, cinta, nuevo_cabezal, detalle, terminado, resultado = ejecutar_paso(
+        estado, cinta, cabezal, transiciones, blank
+    )
+    paso += 1
+    if detalle:
+        detalle['numero'] = paso
+        historial.append(detalle)
+    if not terminado and nuevo_estado in finals:
+        terminado = True
+        resultado = 'aceptada'
+    if not terminado and paso >= MAX_PASOS:
+        terminado = True
+        resultado = 'limite'
+    return nuevo_estado, cinta, nuevo_cabezal, paso, historial, terminado, resultado
+
 def cargar(request):
     context = {
         'maquina_cargada': request.session.get('maquina_nombre'),
@@ -100,7 +116,6 @@ def cargar(request):
             messages.error(request, f'No se pudo cargar "{maquina}". Verifica el archivo .mt.')
             return render(request, 'cargar.html', context)
  
-        # Guardar en sesión
         request.session['maquina_nombre']   = maquina
         request.session['mt_states']        = parsed['states']
         request.session['mt_input_alpha']   = parsed['input_alphabet']
@@ -108,9 +123,7 @@ def cargar(request):
         request.session['mt_initial']       = parsed['initial_state']
         request.session['mt_finals']        = parsed['final_states']
         request.session['mt_blank']         = parsed['blank_symbol']
-        request.session['mt_transiciones']  = transiciones_to_session(
-            {k: v for k, v in parsed.items() if isinstance(k, tuple)}
-        )
+        request.session['mt_transiciones']  = transiciones_to_session(parsed['transitions'])
         request.session.pop('sim_estado',   None)
         request.session.pop('sim_cinta',    None)
         request.session.pop('sim_cabezal',  None)
@@ -123,7 +136,7 @@ def cargar(request):
         messages.success(request, f'Máquina "{maquina}" cargada correctamente.')
         context['maquina_cargada'] = maquina
  
-        transiciones = {k: v for k, v in parsed.items() if isinstance(k, tuple)}
+        transiciones = parsed['transitions']
         context['mt_data'] = {
             'states':        parsed['states'],
             'input_alphabet': parsed['input_alphabet'],
@@ -269,6 +282,29 @@ def simular(request):
  
                 _guardar_en_historial(request, maquina_nombre,
                                       request.session['sim_cadena'], resultado, paso)
+        elif accion == 'paso':
+            if request.session.get('sim_estado') is not None and not request.session.get('sim_terminado', True):
+                estado   = request.session['sim_estado']
+                cinta    = {int(k): v for k, v in request.session['sim_cinta'].items()}
+                cabezal  = request.session['sim_cabezal']
+                paso     = request.session['sim_paso']
+                historial = request.session['sim_historial']
+ 
+                estado, cinta, cabezal, paso, historial, terminado, resultado = ejecutar_un_paso(
+                    estado, cinta, cabezal, transiciones, blank, paso, historial, finals
+                )
+ 
+                request.session['sim_estado']    = estado
+                request.session['sim_cinta']     = {str(k): v for k, v in cinta.items()}
+                request.session['sim_cabezal']   = cabezal
+                request.session['sim_paso']      = paso
+                request.session['sim_historial'] = historial
+                request.session['sim_terminado'] = terminado
+                request.session['sim_resultado'] = resultado
+ 
+                if terminado:
+                    _guardar_en_historial(request, maquina_nombre,
+                                          request.session['sim_cadena'], resultado, paso)
  
         elif accion == 'reiniciar':
             for key in ['sim_estado', 'sim_cinta', 'sim_cabezal',

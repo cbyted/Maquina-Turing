@@ -1,7 +1,6 @@
-from re import search
+﻿from re import search
 from machine import TuringMachine
 
-# Archivos .mt válidos
 valid_machines = {
     "lenguaje-no-regular.mt",
     "palindromo-binario.mt",
@@ -15,7 +14,6 @@ def strip_parsing(data):
     data = [item.strip() for item in data]
     return data
 
-# Convertir las transiciones a tuplas
 def parse_transition(line, dictionary):
     current_state = search(r"(.*)\s->", line).group(1).split(",")
     transition = search(r"->\s*(.*)", line).group(1).split(",")
@@ -25,7 +23,6 @@ def parse_transition(line, dictionary):
 
     dictionary[tuple(stripped_current_state)] = tuple(stripped_transition)
 
-# Parsing de los demas datos
 def general_parsing(line):
     data = search(r":\s*(.*)", line).group(1).split(",")
     if len(data) > 0:
@@ -33,8 +30,7 @@ def general_parsing(line):
         return stripped_data
     else:
         return None
-        
-# Crear un diccionario con los datos obtenidos
+
 def parsing_mt_file(selected_file):
     try:
         parsed_file = {}
@@ -89,7 +85,7 @@ def parsing_mt_file(selected_file):
                             if blank_sym is not None:
                                 parsed_file["blank_symbol"] = blank_sym
                             else:
-                                raise Exception("No se encontraron estados finales")
+                                raise Exception("No se encontraron edetallestados finales")
                         elif "Transiciones" in line:
                             in_transitions = True 
                     mt.close()    
@@ -112,22 +108,32 @@ def show_parsed_file(dictionary):
             print(f"{key} : {dictionary[key]}")
 
 def main():
-    file_dict = parsing_mt_file("termina-en-aa.mt")
-    show_parsed_file(file_dict)
-    
-    # Crear maquina de turing
+    file_dict = parsing_mt_file("duplicadora-de-unos.mt")
+
     mt_simulator = TuringMachine(
         file_dict["states"],
         file_dict["input_alphabet"],
         file_dict["tape_alphabet"],
-        file_dict["initial_state"],
-        file_dict["final_states"],
-        file_dict["blank_symbol"],    
-        file_dict["transitions"]
+        file_dict["initial_state"][0],
+        file_dict["final_states"][0],
+        file_dict["blank_symbol"][0],    
+        file_dict["transitions"],
+        tape="11111"
     )
-    
-    mt_simulator.show_machine()
-    mt_simulator.step()
+    try:
+        mt_simulator.show_machine()
+
+        print("\n[*] Running the tape:")
+        result = mt_simulator.run()
+        if result == True:
+            print("Accepted")
+        else:
+            print("Rejected")
+
+        print("\nFinal result:")
+        mt_simulator.display_tape()
+    except Exception as e:
+        print(f"{e}")
 
 if __name__ == "__main__":
     main()
