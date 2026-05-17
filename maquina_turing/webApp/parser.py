@@ -85,7 +85,7 @@ def parsing_mt_file(selected_file):
                             if blank_sym is not None:
                                 parsed_file["blank_symbol"] = blank_sym
                             else:
-                                raise Exception("No se encontraron estados finales")
+                                raise Exception("No se encontraron edetallestados finales")
                         elif "Transiciones" in line:
                             in_transitions = True 
                     mt.close()    
@@ -108,7 +108,7 @@ def show_parsed_file(dictionary):
             print(f"{key} : {dictionary[key]}")
 
 def main():
-    file_dict = parsing_mt_file("palindromo-binario.mt")
+    file_dict = parsing_mt_file("duplicadora-de-unos.mt")
 
     mt_simulator = TuringMachine(
         file_dict["states"],
@@ -118,7 +118,7 @@ def main():
         file_dict["final_states"][0],
         file_dict["blank_symbol"][0],    
         file_dict["transitions"],
-        tape="1001"
+        tape="11111"
     )
     try:
         mt_simulator.show_machine()

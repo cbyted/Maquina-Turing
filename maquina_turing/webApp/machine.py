@@ -63,6 +63,7 @@ class TuringMachine:
 
             self.current = new_state
         else:
+            self.current = "REJECT"
             return self.current, write_sym, move, None, True, "rechazada"
 
         detalle = {
