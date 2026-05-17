@@ -20,5 +20,8 @@ from webApp import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('cargar/',   views.cargar,   name='cargar'),
+    path('simular/',  views.simular,  name='simular'),
+    path('historial/', views.historial, name='historial'),
 ]
 
