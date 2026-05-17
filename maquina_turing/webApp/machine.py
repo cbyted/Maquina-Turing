@@ -28,6 +28,11 @@ class TuringMachine:
         print(f"[*] Tape: {self.tape}")
 
     def step(self):
+        symbol = '',
+        new_state = ''
+        write_sym = '' 
+        move = ''
+
         if self.head < len(self.tape):
             symbol = self.tape[self.head] 
         else:
@@ -53,10 +58,21 @@ class TuringMachine:
                 if self.head < 0:
                     self.tape.insert(0, self.blank_sym)
                     self.head = 0
+            else:
+                self.head = self.head
 
             self.current = new_state
         else:
-            self.current = "REJECT"
+            return self.current, write_sym, move, None, True, "rechazada"
+
+        detalle = {
+            'estado': self.current,
+            'lee': symbol,
+            'siguiente': new_state,
+            'escribe': write_sym,
+            'direccion': move,
+        }
+        return new_state, self.tape, self.head, detalle, False, None
 
     def display_tape(self):
         tape_view = ''.join(self.tape).rstrip()
@@ -67,6 +83,6 @@ class TuringMachine:
     def run(self):
         while self.current != self.final_state and self.current != "REJECT":
             self.display_tape()
-            self.step()
+            a, b, c, d, e, f = self.step()
             sleep(1)
         return self.current == self.final_state

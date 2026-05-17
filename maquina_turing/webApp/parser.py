@@ -108,7 +108,7 @@ def show_parsed_file(dictionary):
             print(f"{key} : {dictionary[key]}")
 
 def main():
-    file_dict = parsing_mt_file("duplicadora-de-unos.mt")
+    file_dict = parsing_mt_file("palindromo-binario.mt")
 
     mt_simulator = TuringMachine(
         file_dict["states"],
@@ -118,7 +118,7 @@ def main():
         file_dict["final_states"][0],
         file_dict["blank_symbol"][0],    
         file_dict["transitions"],
-        tape="11111"
+        tape="1001"
     )
     try:
         mt_simulator.show_machine()
