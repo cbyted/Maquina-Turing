@@ -118,7 +118,8 @@ def main():
         file_dict["initial_state"][0],
         file_dict["final_states"][0],
         file_dict["blank_symbol"][0],    
-        file_dict["transitions"]
+        file_dict["transitions"],
+        tape="aaabbaa"
     )
     
     print("\n[*] Running the tape:")
