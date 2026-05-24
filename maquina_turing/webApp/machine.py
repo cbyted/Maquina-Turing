@@ -1,9 +1,15 @@
-
-class Tape:
-    blank = ""
-
-class TuringMachine:
-    def __init__(self, states, input_alphabet, tape_alphabet, initial_state, final_states, blank_sym, transitions): 
+﻿class TuringMachine:
+    def __init__(
+        self,
+        states,
+        input_alphabet,
+        tape_alphabet,
+        initial_state,
+        final_states,
+        blank_sym,
+        transitions,
+        tape=None,
+    ):
         self.states = states
         self.input_alphabet = input_alphabet
         self.tape_alphabet = tape_alphabet
@@ -11,10 +17,13 @@ class TuringMachine:
         self.final_states = final_states
         self.blank_sym = blank_sym
         self.transitions = transitions
-        self.head = 0
         self.current = initial_state
-    
-    # debugging
+        self.head = (0, 0)
+        self.tape = {}
+        if tape is not None:
+            for x, symbol in enumerate(tape):
+                self.tape[(x, 0)] = symbol
+
     def show_machine(self):
         print("\n====== TURING MACHINE ======")
         print(f"[*] Estados: {self.states}")
@@ -24,18 +33,53 @@ class TuringMachine:
         print(f"[*] Estados finales: {self.final_states}")
         print(f"[*] Simbolos vacios: {self.blank_sym}")
         print(f"[*] Transiciones: {self.transitions}")
+        print(f"[*] Cabezal: {self.head}")
+
+    def leer_cinta(self):
+        return self.tape.get(self.head, self.blank_sym)
+
+    def mover_cabezal(self, move):
+        x, y = self.head
+        if move in ('R', 'E'):
+            self.head = (x + 1, y)
+        elif move in ('L', 'W'):
+            self.head = (x - 1, y)
+        elif move in ('U', 'N'):
+            self.head = (x, y - 1)
+        elif move in ('D', 'S'):
+            self.head = (x, y + 1)
 
     def step(self):
-        if self.head < len(self.tape_alphabet):
-            symbol = self.tape_alphabet[self.head] 
+        symbol = self.leer_cinta()
+        key = (self.current, symbol)
+        if key not in self.transitions:
+            raise Exception(f"No existe transición para {key}")
+        new_state, write_sym, move = self.transitions[key]
+        self.tape[self.head] = write_sym
+        self.current = new_state
+        self.mover_cabezal(move)
+
+    def run(self, max_steps=1000):
+        steps = 0
+        while self.current not in self.final_states and steps < max_steps:
+            self.step()
+            steps += 1
+        return self.current in self.final_states
+
+    def display_tape(self, ventana=4):
+        if self.tape:
+            xs = [pos[0] for pos in self.tape.keys()] + [self.head[0]]
+            ys = [pos[1] for pos in self.tape.keys()] + [self.head[1]]
+            min_x, max_x = min(xs) - 2, max(xs) + 2
+            min_y, max_y = min(ys) - 2, max(ys) + 2
         else:
-            symbol = ''
+            min_x, max_x = self.head[0] - ventana, self.head[0] + ventana
+            min_y, max_y = self.head[1] - ventana, self.head[1] + ventana
 
-        if (self.current, symbol) in self.transitions:
-            new_state, write_sym, move = self.transitions[(self.current, symbol)]
-            print(f"{new_state} {write_sym} {move}")
-            if (self.head < len(self.tape_alphabet)):
-                self.tape_alphabet[self.head] = write_sym
-
-    def run(self):
-        return
+        for y in range(min_y, max_y + 1):
+            row = []
+            for x in range(min_x, max_x + 1):
+                symbol = self.tape.get((x, y), self.blank_sym)
+                marker = '>' if (x, y) == self.head else ' '
+                row.append(f"{marker}{symbol}")
+            print(' '.join(row))

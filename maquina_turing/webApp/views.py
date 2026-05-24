@@ -2,13 +2,19 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .parser import parsing_mt_file
  
- 
 MAX_PASOS = 500
 
+def posicion_a_clave(pos):
+    return f"{pos[0]}||{pos[1]}"
+ 
+def clave_a_posicion(clave):
+    x, y = clave.split('||')
+    return (int(x), int(y))
+ 
 def inicializar_cinta(cadena, simbolo_blanco):
     cinta = {}
-    for i, simbolo in enumerate(cadena):
-        cinta[i] = simbolo
+    for x, simbolo in enumerate(cadena):
+        cinta[(x, 0)] = simbolo
     return cinta
  
 def leer_cinta(cinta, pos, simbolo_blanco):
@@ -21,12 +27,17 @@ def ejecutar_paso(estado, cinta, cabezal, transiciones, simbolo_blanco):
         return estado, cinta, cabezal, None, True, 'rechazada'
     nuevo_estado, escribe, direccion = transiciones[clave]
     cinta[cabezal] = escribe
-    if direccion == 'R':
-        nuevo_cabezal = cabezal + 1
-    elif direccion == 'L':
-        nuevo_cabezal = cabezal - 1
+    x, y = cabezal
+    if direccion in ('R', 'E'):
+        nuevo_cabezal = (x + 1, y)
+    elif direccion in ('L', 'W'):
+        nuevo_cabezal = (x - 1, y)
+    elif direccion in ('U', 'N'):
+        nuevo_cabezal = (x, y - 1)
+    elif direccion in ('D', 'S'):
+        nuevo_cabezal = (x, y + 1)
     else:
-        nuevo_cabezal = cabezal
+        nuevo_cabezal = (x, y)
     detalle = {
         'estado':    estado,
         'lee':       simbolo,
@@ -36,25 +47,44 @@ def ejecutar_paso(estado, cinta, cabezal, transiciones, simbolo_blanco):
     }
     return nuevo_estado, cinta, nuevo_cabezal, detalle, False, None
 
-def construir_cinta_visible(cinta, cabezal, simbolo_blanco, ventana=6):
+def construir_cinta_visible(cinta, cabezal, simbolo_blanco, ventana=4):
     if cinta:
-        min_pos = min(min(cinta.keys()), cabezal) - 2
-        max_pos = max(max(cinta.keys()), cabezal) + 2
+        xs = [pos[0] for pos in cinta.keys()] + [cabezal[0]]
+        ys = [pos[1] for pos in cinta.keys()] + [cabezal[1]]
+        min_x = min(xs) - 2
+        max_x = max(xs) + 2
+        min_y = min(ys) - 2
+        max_y = max(ys) + 2
     else:
-        min_pos = cabezal - ventana
-        max_pos = cabezal + ventana
+        min_x = cabezal[0] - ventana
+        max_x = cabezal[0] + ventana
+        min_y = cabezal[1] - ventana
+        max_y = cabezal[1] + ventana
  
-    min_pos = min(min_pos, cabezal - ventana)
-    max_pos = max(max_pos, cabezal + ventana)
- 
-    celdas = []
-    for pos in range(min_pos, max_pos + 1):
-        celdas.append({
-            'posicion':   pos,
-            'simbolo':    cinta.get(pos, simbolo_blanco),
-            'es_cabezal': pos == cabezal,
-        })
-    return celdas
+    grid = []
+    for y in range(min_y, max_y + 1):
+        row = []
+        for x in range(min_x, max_x + 1):
+            row.append({
+                'x':          x,
+                'y':          y,
+                'simbolo':    cinta.get((x, y), simbolo_blanco),
+                'es_cabezal': (x, y) == cabezal,
+            })
+        grid.append(row)
+    return grid
+
+def cinta_to_session(cinta):
+    resultado = {}
+    for posicion, valor in cinta.items():
+        resultado[posicion_a_clave(posicion)] = valor
+    return resultado
+
+def session_to_cinta(session_cinta):
+    resultado = {}
+    for clave_str, valor in session_cinta.items():
+        resultado[clave_a_posicion(clave_str)] = valor
+    return resultado
 
 def session_to_transiciones(session_trans):
     resultado = {}
@@ -120,9 +150,9 @@ def cargar(request):
         request.session['mt_states']        = parsed['states']
         request.session['mt_input_alpha']   = parsed['input_alphabet']
         request.session['mt_tape_alpha']    = parsed['tape_alphabet']
-        request.session['mt_initial']       = parsed['initial_state']
+        request.session['mt_initial']       = parsed['initial_state'][0] if isinstance(parsed['initial_state'], list) else parsed['initial_state']
         request.session['mt_finals']        = parsed['final_states']
-        request.session['mt_blank']         = parsed['blank_symbol']
+        request.session['mt_blank']         = parsed['blank_symbol'][0] if isinstance(parsed['blank_symbol'], list) else parsed['blank_symbol']
         request.session['mt_transiciones']  = transiciones_to_session(parsed['transitions'])
         request.session.pop('sim_estado',   None)
         request.session.pop('sim_cinta',    None)
@@ -141,9 +171,9 @@ def cargar(request):
             'states':        parsed['states'],
             'input_alphabet': parsed['input_alphabet'],
             'tape_alphabet': parsed['tape_alphabet'],
-            'initial_state': parsed['initial_state'],
+            'initial_state': parsed['initial_state'][0] if isinstance(parsed['initial_state'], list) else parsed['initial_state'],
             'final_states':  parsed['final_states'],
-            'blank_symbol':  parsed['blank_symbol'],
+            'blank_symbol':  parsed['blank_symbol'][0] if isinstance(parsed['blank_symbol'], list) else parsed['blank_symbol'],
             'transitions':   transiciones_to_list(transiciones),
         }
  
@@ -199,82 +229,53 @@ def simular(request):
  
             request.session['sim_cadena']    = cadena
             request.session['sim_estado']    = estado_inicial
-            request.session['sim_cinta']     = {str(k): v for k, v in cinta.items()}
-            request.session['sim_cabezal']   = 0
+            request.session['sim_cinta']     = cinta_to_session(cinta)
+            request.session['sim_cabezal']   = [0, 0]
             request.session['sim_paso']      = 0
             request.session['sim_historial'] = []
             request.session['sim_terminado'] = False
             request.session['sim_resultado'] = None
  
-            if not request.session.get('sim_terminado', True):
-                estado   = request.session['sim_estado']
-                cinta    = {int(k): v for k, v in request.session['sim_cinta'].items()}
-                cabezal  = request.session['sim_cabezal']
-                paso     = request.session['sim_paso']
-                historial = request.session['sim_historial']
+            estado   = request.session['sim_estado']
+            cinta    = session_to_cinta(request.session['sim_cinta'])
+            cabezal  = tuple(request.session['sim_cabezal'])
+            paso     = request.session['sim_paso']
+            historial = request.session['sim_historial']
  
-                nuevo_estado, cinta, nuevo_cabezal, detalle, terminado, resultado = \
-                    ejecutar_paso(estado, cinta, cabezal, transiciones, blank)
+            estado, cinta, cabezal, paso, historial, terminado, resultado = ejecutar_un_paso(
+                estado, cinta, cabezal, transiciones, blank, paso, historial, finals
+            )
  
-                paso += 1
+            request.session['sim_estado']    = estado
+            request.session['sim_cinta']     = cinta_to_session(cinta)
+            request.session['sim_cabezal']   = [cabezal[0], cabezal[1]]
+            request.session['sim_paso']      = paso
+            request.session['sim_historial'] = historial
+            request.session['sim_terminado'] = terminado
+            request.session['sim_resultado'] = resultado
  
-                if detalle:
-                    detalle['numero'] = paso
-                    historial.append(detalle)
- 
-                if not terminado and nuevo_estado in finals:
-                    terminado = True
-                    resultado = 'aceptada'
- 
-                if not terminado and paso >= MAX_PASOS:
-                    terminado = True
-                    resultado = 'limite'
- 
-                request.session['sim_estado']    = nuevo_estado
-                request.session['sim_cinta']     = {str(k): v for k, v in cinta.items()}
-                request.session['sim_cabezal']   = nuevo_cabezal
-                request.session['sim_paso']      = paso
-                request.session['sim_historial'] = historial
-                request.session['sim_terminado'] = terminado
-                request.session['sim_resultado'] = resultado
- 
-                # Guardar en historial global de la sesión si terminó
-                if terminado:
-                    _guardar_en_historial(request, maquina_nombre,
-                                          request.session['sim_cadena'], resultado, paso)
+            if terminado:
+                _guardar_en_historial(request, maquina_nombre,
+                                      request.session['sim_cadena'], resultado, paso)
  
         elif accion == 'completo':
             if not request.session.get('sim_terminado', True):
                 estado   = request.session['sim_estado']
-                cinta    = {int(k): v for k, v in request.session['sim_cinta'].items()}
-                cabezal  = request.session['sim_cabezal']
+                cinta    = session_to_cinta(request.session.get('sim_cinta', {}))
+                cabezal  = tuple(request.session.get('sim_cabezal', [0, 0]))
                 paso     = request.session['sim_paso']
                 historial = request.session['sim_historial']
                 terminado = False
                 resultado = None
  
                 while not terminado:
-                    nuevo_estado, cinta, cabezal, detalle, terminado, resultado = \
-                        ejecutar_paso(estado, cinta, cabezal, transiciones, blank)
- 
-                    paso += 1
-                    if detalle:
-                        detalle['numero'] = paso
-                        historial.append(detalle)
- 
-                    estado = nuevo_estado
- 
-                    if not terminado and estado in finals:
-                        terminado = True
-                        resultado = 'aceptada'
- 
-                    if not terminado and paso >= MAX_PASOS:
-                        terminado = True
-                        resultado = 'limite'
+                    estado, cinta, cabezal, paso, historial, terminado, resultado = ejecutar_un_paso(
+                        estado, cinta, cabezal, transiciones, blank, paso, historial, finals
+                    )
  
                 request.session['sim_estado']    = estado
-                request.session['sim_cinta']     = {str(k): v for k, v in cinta.items()}
-                request.session['sim_cabezal']   = cabezal
+                request.session['sim_cinta']     = cinta_to_session(cinta)
+                request.session['sim_cabezal']   = [cabezal[0], cabezal[1]]
                 request.session['sim_paso']      = paso
                 request.session['sim_historial'] = historial
                 request.session['sim_terminado'] = terminado
@@ -285,8 +286,8 @@ def simular(request):
         elif accion == 'paso':
             if request.session.get('sim_estado') is not None and not request.session.get('sim_terminado', True):
                 estado   = request.session['sim_estado']
-                cinta    = {int(k): v for k, v in request.session['sim_cinta'].items()}
-                cabezal  = request.session['sim_cabezal']
+                cinta    = session_to_cinta(request.session.get('sim_cinta', {}))
+                cabezal  = tuple(request.session.get('sim_cabezal', [0, 0]))
                 paso     = request.session['sim_paso']
                 historial = request.session['sim_historial']
  
@@ -295,8 +296,8 @@ def simular(request):
                 )
  
                 request.session['sim_estado']    = estado
-                request.session['sim_cinta']     = {str(k): v for k, v in cinta.items()}
-                request.session['sim_cabezal']   = cabezal
+                request.session['sim_cinta']     = cinta_to_session(cinta)
+                request.session['sim_cabezal']   = [cabezal[0], cabezal[1]]
                 request.session['sim_paso']      = paso
                 request.session['sim_historial'] = historial
                 request.session['sim_terminado'] = terminado
@@ -317,8 +318,8 @@ def simular(request):
     sim_activa = 'sim_estado' in request.session
  
     if sim_activa:
-        cinta    = {int(k): v for k, v in request.session.get('sim_cinta', {}).items()}
-        cabezal  = request.session.get('sim_cabezal', 0)
+        cinta    = session_to_cinta(request.session.get('sim_cinta', {}))
+        cabezal  = tuple(request.session.get('sim_cabezal', [0, 0]))
         historial = request.session.get('sim_historial', [])
  
         context.update({
