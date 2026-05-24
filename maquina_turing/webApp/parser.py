@@ -33,6 +33,7 @@ def general_parsing(line):
     else:
         return None
 
+
 def parsing_mt_file(selected_file):
     try:
         parsed_file = {}
@@ -89,6 +90,7 @@ def parsing_mt_file(selected_file):
                                 parsed_file["blank_symbol"] = blank_sym
                             else:
                                 raise Exception("No se encontraron edetallestados finales")
+                                raise Exception("No se encontraron edetallestados finales")
                         elif "Transiciones" in line:
                             in_transitions = True 
                     mt.close()    
@@ -113,6 +115,8 @@ def show_parsed_file(dictionary):
 def main():
     file_dict = parsing_mt_file("duplicadora-de-unos.mt")
 
+    file_dict = parsing_mt_file("duplicadora-de-unos.mt")
+
     mt_simulator = TuringMachine(
         file_dict["states"],
         file_dict["input_alphabet"],
@@ -123,6 +127,20 @@ def main():
         file_dict["transitions"],
         tape="11111"
     )
+    try:
+        mt_simulator.show_machine()
+
+        print("\n[*] Running the tape:")
+        result = mt_simulator.run()
+        if result == True:
+            print("Accepted")
+        else:
+            print("Rejected")
+
+        print("\nFinal result:")
+        mt_simulator.display_tape()
+    except Exception as e:
+        print(f"{e}")
     try:
         mt_simulator.show_machine()
 
