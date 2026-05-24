@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Simular{% endblock %}
+{% block nav_simular %}active{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1 class="page-title">Simulador <span class="highlight">paso a paso</span></h1>
+    <p class="page-subtitle">
+        {% if maquina_nombre %}
+            Máquina cargada: <strong>{{ maquina_nombre }}</strong>
+        {% else %}
+            No hay ninguna máquina cargada.
+            <a href="{% url 'cargar' %}" style="color: var(--accent-blue);">Cargar una →</a>
+        {% endif %}
+    </p>
+</div>
+
+{% if not maquina_nombre %}
+<div class="card">
+    <div class="empty-state">
+        <div class="empty-state-icon">⊢</div>
+        <div class="empty-state-text">
+            Primero debes cargar una Máquina de Turing para poder simular.
+        </div>
+        <br>
+        <a href="{% url 'cargar' %}" class="btn btn-primary">Ir a cargar</a>
+    </div>
+</div>
+
+{% else %}
+
+<div class="sim-layout">
+
+    <div>
+        <div class="card" style="margin-bottom: 1rem;">
+            <div class="card-title">Nueva simulación</div>
+            <form method="POST" action="{% url 'simular' %}">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="iniciar">
+                <div class="form-group">
+                    <label class="form-label" for="cadena">Cadena de entrada</label>
+                    <input
+                        type="text"
+                        id="cadena"
+                        name="cadena"
+                        class="form-control form-control-mono"
+                        placeholder="Ej: 0011"
+                        value="{{ cadena_actual|default:'' }}"
+                        autocomplete="off"
+                    >
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        ↺ Iniciar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {% if simulacion_activa %}
+        <div class="card" style="margin-bottom: 1rem;">
+            <div class="card-title">Controles</div>
+
+            <div class="btn-group" style="flex-direction: column; gap: 8px;">
+
+                {% if not terminado %}
+                <form method="POST" action="{% url 'simular' %}" style="width: 100%;">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="paso">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        ▶ Siguiente paso
+                    </button>
+                </form>
+
+                <form method="POST" action="{% url 'simular' %}" style="width: 100%;">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="completo">
+                    <button type="submit" class="btn btn-success" style="width: 100%;">
+                        ⏩ Ejecutar completo
+                    </button>
+                </form>
+                {% endif %}
+
+                <form method="POST" action="{% url 'simular' %}" style="width: 100%;">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="reiniciar">
+                    <button type="submit" class="btn btn-danger btn-sm" style="width: 100%;">
+                        ✕ Reiniciar
+                    </button>
+                </form>
+
+            </div>
+        </div>
+        {% endif %}
+
+        {% if simulacion_activa %}
+        <div class="card">
+            <div class="card-title">Estado actual</div>
+            <div class="sim-status">
+                <div class="status-chip">
+                    <div class="status-chip-label">Estado</div>
+                    <div class="status-chip-value">{{ estado_actual }}</div>
+                </div>
+                <div class="status-chip">
+                    <div class="status-chip-label">Paso</div>
+                    <div class="status-chip-value">{{ paso_actual }}</div>
+                </div>
+                <div class="status-chip">
+                    <div class="status-chip-label">Posición</div>
+                    <div class="status-chip-value">{{ cabezal }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <div>
+        {% if terminado %}
+            {% if resultado == 'aceptada' %}
+            <div class="result-banner accepted">
+                <div class="result-icon">✓</div>
+                <div>
+                    <div class="result-title">Cadena aceptada</div>
+                    <div class="result-detail">
+                        "{{ cadena_actual }}" pertenece al lenguaje reconocido por esta MT.
+                        ({{ paso_actual }} pasos)
+                    </div>
+                </div>
+            </div>
+            {% elif resultado == 'rechazada' %}
+            <div class="result-banner rejected">
+                <div class="result-icon">✕</div>
+                <div>
+                    <div class="result-title">Cadena rechazada</div>
+                    <div class="result-detail">
+                        "{{ cadena_actual }}" no pertenece al lenguaje. ({{ paso_actual }} pasos)
+                    </div>
+                </div>
+            </div>
+            {% elif resultado == 'limite' %}
+            <div class="result-banner limit">
+                <div class="result-icon">⚠</div>
+                <div>
+                    <div class="result-title">Límite de pasos alcanzado</div>
+                    <div class="result-detail">
+                        La MT superó {{ max_pasos }} pasos sin terminar. Posible bucle infinito.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+
+        {% if simulacion_activa %}
+        <div class="card" style="margin-bottom: 1rem;">
+            <div class="card-title">Cinta</div>
+            <div class="tape-section">
+                <div class="tape-wrapper">
+                    <div class="tape-grid">
+                        {% for fila in cinta_visible %}
+                        <div class="tape-row">
+                            {% for celda in fila %}
+                            <div class="tape-cell {% if celda.es_cabezal %}active{% endif %}">
+                                {% if celda.es_cabezal %}
+                                    <div class="head-indicator">▼</div>
+                                {% else %}
+                                    <div style="height: 16px;"></div>
+                                {% endif %}
+                                <div class="cell-box">{{ celda.simbolo }}</div>
+                                <div class="cell-index">{{ celda.x }},{{ celda.y }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if historial %}
+        <div class="card">
+            <div class="card-title">Historial de transiciones</div>
+            <div class="steps-log">
+                {% for paso in historial %}
+                <div class="step-entry">
+                    <span class="step-num">{{ paso.numero }}</span>
+                    <span class="step-state">{{ paso.estado }}</span>
+                    <span class="step-sym">{{ paso.lee }}</span>
+                    <span class="step-arrow">→</span>
+                    <span class="step-next">{{ paso.siguiente }}</span>
+                    <span class="step-sym">{{ paso.escribe }}</span>
+                    <span class="step-dir">{{ paso.direccion }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="card">
+            <div class="empty-state">
+                <div class="empty-state-icon">▶</div>
+                <div class="empty-state-text">
+                    Ingresa una cadena de entrada y presiona "Iniciar" para comenzar.
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endif %}
+{% endblock %}

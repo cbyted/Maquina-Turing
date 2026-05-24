@@ -1,4 +1,173 @@
-{% extends "base.html" %} {% block title %} Cargar Maquina de Turing {% endblock %}
+{% extends "base.html" %}
+{% load static %}
+ 
+{% block title %}Cargar Máquina{% endblock %}
+{% block nav_cargar %}active{% endblock %}
+ 
 {% block content %}
-<p>Cargar .mt</p>
+ 
+<div class="page-header">
+    <h1 class="page-title">Cargar <span class="highlight">Máquina de Turing</span></h1>
+    <p class="page-subtitle">Selecciona una de las máquinas disponibles para cargarla en el simulador.</p>
+</div>
+ 
+<form method="POST" action="{% url 'cargar' %}">
+    {% csrf_token %}
+ 
+    <div class="card" style="margin-bottom: 1.2rem;">
+        <div class="card-title">Máquinas disponibles</div>
+ 
+        <div class="machines-grid">
+ 
+            <div class="machine-option">
+                <input type="radio" name="maquina" id="m1"
+                       value="lenguaje-no-regular.mt"
+                       {% if maquina_cargada == 'lenguaje-no-regular.mt' %}checked{% endif %}>
+                <label class="machine-card" for="m1">
+                    <div class="machine-lang">0ⁿ1ⁿ</div>
+                    <div class="machine-name">Lenguaje no regular</div>
+                    <div class="machine-desc">Acepta cadenas de la forma 0ⁿ1ⁿ con n ≥ 0. Demuestra que este lenguaje no es regular.</div>
+                </label>
+            </div>
+ 
+            <div class="machine-option">
+                <input type="radio" name="maquina" id="m2"
+                       value="palindromo-binario.mt"
+                       {% if maquina_cargada == 'palindromo-binario.mt' %}checked{% endif %}>
+                <label class="machine-card" for="m2">
+                    <div class="machine-lang">w = wᴿ</div>
+                    <div class="machine-name">Palíndromo binario</div>
+                    <div class="machine-desc">Acepta cadenas binarias que son iguales leídas de izquierda a derecha y viceversa.</div>
+                </label>
+            </div>
+ 
+            <div class="machine-option">
+                <input type="radio" name="maquina" id="m3"
+                       value="duplicadora-de-unos.mt"
+                       {% if maquina_cargada == 'duplicadora-de-unos.mt' %}checked{% endif %}>
+                <label class="machine-card" for="m3">
+                    <div class="machine-lang">1ⁿ → 1²ⁿ</div>
+                    <div class="machine-name">Duplicadora de unos</div>
+                    <div class="machine-desc">Toma una secuencia de n unos y la duplica. Función computable sobre unario.</div>
+                </label>
+            </div>
+
+            <div class="machine-option">
+                <input type="radio" name="maquina" id="m4"
+                       value="termina-en-aa.mt"
+                       {% if maquina_cargada == 'termina-en-aa.mt' %}checked{% endif %}>
+                <label class="machine-card" for="m4">
+                    <div class="machine-lang">∗aa</div>
+                    <div class="machine-name">Termina en "aa"</div>
+                    <div class="machine-desc">Acepta cadenas sobre {a,b} que terminan en "aa". Lenguaje regular.</div>
+                </label>
+            </div>
+
+            <div class="machine-option">
+                <input type="radio" name="maquina" id="m5"
+                       value="duplicadora-binaria.mt"
+                       {% if maquina_cargada == 'duplicadora-binaria.mt' %}checked{% endif %}>
+                <label class="machine-card" for="m5">
+                    <div class="machine-lang">w → w#w</div>
+                    <div class="machine-name">Duplicadora binaria</div>
+                    <div class="machine-desc">Copia la cadena binaria separada por '#'. Ej: "10" → "10#10".</div>
+                </label>
+            </div>
+ 
+            <div class="machine-option">
+                <input type="radio" name="maquina" id="m6"
+                       value="langtons-ant.mt"
+                       {% if maquina_cargada == 'langtons-ant.mt' %}checked{% endif %}>
+                <label class="machine-card" for="m6">
+                    <div class="machine-lang">Ant</div>
+                    <div class="machine-name">Langton's Ant</div>
+                    <div class="machine-desc">Ejemplo multidimensional 2D: la hormiga de Langton sobre cinta infinita.</div>
+                </label>
+            </div>
+
+            <div class="machine-option">
+                <input type="radio" name="maquina" id="m7"
+                       value="suma-dos-numeros.mt"
+                       {% if maquina_cargada == 'suma-dos-numeros.mt' %}checked{% endif %}>
+                <label class="machine-card" for="m7">
+                    <div class="machine-lang">1ⁿ#1ᵐ → 1ⁿ⁺ᵐ</div>
+                    <div class="machine-name">Suma en unario</div>
+                    <div class="machine-desc">Suma dos números representados en unario. Ej: "11#111" → "11111".</div>
+                </label>
+            </div>
+        </div>
+ 
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">
+                ⊢ Cargar máquina
+            </button>
+            {% if maquina_cargada %}
+                <a href="{% url 'simular' %}" class="btn btn-success">
+                    ▶ Ir a simular
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</form>
+
+{% if mt_data %}
+<div class="card">
+    <div class="card-title">7-tupla cargada — {{ maquina_cargada }}</div>
+ 
+    <div class="tupla-grid" style="margin-bottom: 1.2rem;">
+        <div class="tupla-item">
+            <div class="tupla-label">Q — Estados</div>
+            <div class="tupla-value">{{ mt_data.states|join:", " }}</div>
+        </div>
+        <div class="tupla-item">
+            <div class="tupla-label">Σ — Alfabeto entrada</div>
+            <div class="tupla-value">{ {{ mt_data.input_alphabet|join:", " }} }</div>
+        </div>
+        <div class="tupla-item">
+            <div class="tupla-label">Γ — Alfabeto cinta</div>
+            <div class="tupla-value">{ {{ mt_data.tape_alphabet|join:", " }} }</div>
+        </div>
+        <div class="tupla-item">
+            <div class="tupla-label">q₀ — Estado inicial</div>
+            <div class="tupla-value">{{ mt_data.initial_state }}</div>
+        </div>
+        <div class="tupla-item">
+            <div class="tupla-label">F — Estados finales</div>
+            <div class="tupla-value">{ {{ mt_data.final_states|join:", " }} }</div>
+        </div>
+        <div class="tupla-item">
+            <div class="tupla-label">B — Símbolo blanco</div>
+            <div class="tupla-value">{{ mt_data.blank_symbol }}</div>
+        </div>
+    </div>
+ 
+    <div class="divider"></div>
+ 
+    <div class="card-title" style="margin-top: 1rem;">δ — Función de transición</div>
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Estado actual</th>
+                    <th>Lee</th>
+                    <th>→ Nuevo estado</th>
+                    <th>Escribe</th>
+                    <th>Mueve</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trans in mt_data.transitions %}
+                <tr>
+                    <td class="state">{{ trans.from_state }}</td>
+                    <td class="sym">{{ trans.read }}</td>
+                    <td class="state">{{ trans.to_state }}</td>
+                    <td class="sym">{{ trans.write }}</td>
+                    <td class="dir-{{ trans.direction }}">{{ trans.direction }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

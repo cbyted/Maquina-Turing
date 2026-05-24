@@ -1,4 +1,5 @@
-from re import search
+﻿from re import search
+import os
 from machine import TuringMachine
 
 valid_machines = {
@@ -7,7 +8,8 @@ valid_machines = {
     "duplicadora-de-unos.mt",
     "duplicadora-binaria.mt",
     "termina-en-aa.mt",
-    "suma-dos-numeros.mt"
+    "suma-dos-numeros.mt",
+    "langtons-ant.mt"
 }
 
 def strip_parsing(data):
@@ -31,6 +33,7 @@ def general_parsing(line):
     else:
         return None
 
+
 def parsing_mt_file(selected_file):
     try:
         parsed_file = {}
@@ -42,7 +45,8 @@ def parsing_mt_file(selected_file):
             raise Exception("Maquina no válida")
         else:
             try:
-                filename = "files/machines/" + selected_file
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                filename = os.path.join(script_dir, "files", "machines", selected_file)
                 with open(filename, 'r') as mt:
                     print("[+] Exito: El archivo se cargó correctamente")
 
@@ -86,6 +90,7 @@ def parsing_mt_file(selected_file):
                                 parsed_file["blank_symbol"] = blank_sym
                             else:
                                 raise Exception("No se encontraron edetallestados finales")
+                                raise Exception("No se encontraron edetallestados finales")
                         elif "Transiciones" in line:
                             in_transitions = True 
                     mt.close()    
@@ -110,16 +115,32 @@ def show_parsed_file(dictionary):
 def main():
     file_dict = parsing_mt_file("duplicadora-de-unos.mt")
 
+    file_dict = parsing_mt_file("duplicadora-de-unos.mt")
+
     mt_simulator = TuringMachine(
         file_dict["states"],
         file_dict["input_alphabet"],
         file_dict["tape_alphabet"],
         file_dict["initial_state"][0],
-        file_dict["final_states"][0],
+        file_dict["final_states"],
         file_dict["blank_symbol"][0],    
         file_dict["transitions"],
         tape="11111"
     )
+    try:
+        mt_simulator.show_machine()
+
+        print("\n[*] Running the tape:")
+        result = mt_simulator.run()
+        if result == True:
+            print("Accepted")
+        else:
+            print("Rejected")
+
+        print("\nFinal result:")
+        mt_simulator.display_tape()
+    except Exception as e:
+        print(f"{e}")
     try:
         mt_simulator.show_machine()
 
