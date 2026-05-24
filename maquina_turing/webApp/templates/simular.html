@@ -159,16 +159,20 @@
             <div class="card-title">Cinta</div>
             <div class="tape-section">
                 <div class="tape-wrapper">
-                    <div class="tape">
-                        {% for celda in cinta_visible %}
-                        <div class="tape-cell {% if celda.es_cabezal %}active{% endif %}">
-                            {% if celda.es_cabezal %}
-                                <div class="head-indicator">▼</div>
-                            {% else %}
-                                <div style="height: 16px;"></div>
-                            {% endif %}
-                            <div class="cell-box">{{ celda.simbolo }}</div>
-                            <div class="cell-index">{{ celda.posicion }}</div>
+                    <div class="tape-grid">
+                        {% for fila in cinta_visible %}
+                        <div class="tape-row">
+                            {% for celda in fila %}
+                            <div class="tape-cell {% if celda.es_cabezal %}active{% endif %}">
+                                {% if celda.es_cabezal %}
+                                    <div class="head-indicator">▼</div>
+                                {% else %}
+                                    <div style="height: 16px;"></div>
+                                {% endif %}
+                                <div class="cell-box">{{ celda.simbolo }}</div>
+                                <div class="cell-index">{{ celda.x }},{{ celda.y }}</div>
+                            </div>
+                            {% endfor %}
                         </div>
                         {% endfor %}
                     </div>

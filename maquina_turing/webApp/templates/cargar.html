@@ -76,15 +76,25 @@
  
             <div class="machine-option">
                 <input type="radio" name="maquina" id="m6"
+                       value="langtons-ant.mt"
+                       {% if maquina_cargada == 'langtons-ant.mt' %}checked{% endif %}>
+                <label class="machine-card" for="m6">
+                    <div class="machine-lang">Ant</div>
+                    <div class="machine-name">Langton's Ant</div>
+                    <div class="machine-desc">Ejemplo multidimensional 2D: la hormiga de Langton sobre cinta infinita.</div>
+                </label>
+            </div>
+
+            <div class="machine-option">
+                <input type="radio" name="maquina" id="m7"
                        value="suma-dos-numeros.mt"
                        {% if maquina_cargada == 'suma-dos-numeros.mt' %}checked{% endif %}>
-                <label class="machine-card" for="m6">
+                <label class="machine-card" for="m7">
                     <div class="machine-lang">1ⁿ#1ᵐ → 1ⁿ⁺ᵐ</div>
                     <div class="machine-name">Suma en unario</div>
                     <div class="machine-desc">Suma dos números representados en unario. Ej: "11#111" → "11111".</div>
                 </label>
             </div>
- 
         </div>
  
         <div class="btn-group">
