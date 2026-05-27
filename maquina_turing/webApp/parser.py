@@ -1,6 +1,6 @@
 ﻿from re import search
 import os
-from machine import TuringMachine
+from .machine import TuringMachine
 
 valid_machines = {
     "lenguaje-no-regular.mt",
