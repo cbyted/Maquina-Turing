@@ -16,9 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.views.generic import RedirectView
 from webApp import views
 
 urlpatterns = [
+    path('', RedirectView.as_view(url='cargar/', permanent=False), name='home'),
     path('admin/', admin.site.urls),
     path('cargar/',   views.cargar,   name='cargar'),
     path('simular/',  views.simular,  name='simular'),

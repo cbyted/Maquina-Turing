@@ -51,9 +51,12 @@ def parsing_mt_file(selected_file):
                     print("[+] Exito: El archivo se cargó correctamente")
 
                     for line in mt:
+                        line = line.strip()
+                        if not line:
+                            continue
                         if in_transitions:
-                            parse_transition(line, transitions)    
-                        
+                            parse_transition(line, transitions)
+
                         if "Estados" in line:
                             states = general_parsing(line)
                             if states is not None:
