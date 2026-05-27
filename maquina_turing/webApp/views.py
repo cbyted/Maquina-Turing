@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .parser import parsing_mt_file
@@ -11,11 +12,36 @@ def clave_a_posicion(clave):
     x, y = clave.split('||')
     return (int(x), int(y))
  
-def inicializar_cinta(cadena, simbolo_blanco):
+def parse_cadena_entrada(cadena):
+    cadena = str(cadena or '').strip()
+    if not cadena:
+        return ''
+    if ',' in cadena or '\n' in cadena or '\r' in cadena:
+        filas = [fila.replace(' ', '') for fila in re.split(r'[\r\n,]+', cadena) if fila.strip()]
+        return filas
+    return cadena
+
+def normalizar_simbolo_entrada(simbolo, blank_symbol, tape_alphabet):
+    if simbolo == '0' and blank_symbol != '0' and '0' not in tape_alphabet:
+        return blank_symbol
+    return simbolo
+ 
+def inicializar_cinta(cadena, simbolo_blanco, tape_alphabet):
     cinta = {}
-    for x, simbolo in enumerate(cadena):
-        cinta[(x, 0)] = simbolo
-    return cinta
+    cabezal = (0, 0)
+
+    if isinstance(cadena, list):
+        for y, fila in enumerate(cadena):
+            for x, simbolo in enumerate(fila):
+                cinta[(x, y)] = normalizar_simbolo_entrada(simbolo, simbolo_blanco, tape_alphabet)
+        if cadena:
+            cabezal = (len(cadena[0]) // 2, len(cadena) // 2)
+    else:
+        for x, simbolo in enumerate(cadena):
+            cinta[(x, 0)] = normalizar_simbolo_entrada(simbolo, simbolo_blanco, tape_alphabet)
+        cabezal = (0, 0)
+
+    return cinta, cabezal
  
 def leer_cinta(cinta, pos, simbolo_blanco):
     return cinta.get(pos, simbolo_blanco)
@@ -34,8 +60,10 @@ def ejecutar_paso(estado, cinta, cabezal, transiciones, simbolo_blanco):
         nuevo_cabezal = (x - 1, y)
     elif direccion in ('U', 'N'):
         nuevo_cabezal = (x, y - 1)
-    elif direccion in ('D', 'S'):
+    elif direccion in ('D',):
         nuevo_cabezal = (x, y + 1)
+    elif direccion in ('S', '-'):  # Stay
+        nuevo_cabezal = (x, y)
     else:
         nuevo_cabezal = (x, y)
     detalle = {
@@ -114,6 +142,9 @@ def transiciones_to_list(transiciones):
     return sorted(lista, key=lambda x: (x['from_state'], x['read']))
 
 def ejecutar_un_paso(estado, cinta, cabezal, transiciones, blank, paso, historial, finals):
+    if estado in finals:
+        return estado, cinta, cabezal, paso, historial, True, 'aceptada'
+
     nuevo_estado, cinta, nuevo_cabezal, detalle, terminado, resultado = ejecutar_paso(
         estado, cinta, cabezal, transiciones, blank
     )
@@ -224,13 +255,13 @@ def simular(request):
         if accion == 'iniciar':
             cadena = request.POST.get('cadena', '').strip()
             estado_inicial = request.session.get('mt_initial', 'q0')
- 
-            cinta = inicializar_cinta(cadena, blank)
+            cadena_parsed = parse_cadena_entrada(cadena)
+            cinta, cabezal = inicializar_cinta(cadena_parsed, blank, request.session.get('mt_tape_alpha', []))
  
             request.session['sim_cadena']    = cadena
             request.session['sim_estado']    = estado_inicial
             request.session['sim_cinta']     = cinta_to_session(cinta)
-            request.session['sim_cabezal']   = [0, 0]
+            request.session['sim_cabezal']   = [cabezal[0], cabezal[1]]
             request.session['sim_paso']      = 0
             request.session['sim_historial'] = []
             request.session['sim_terminado'] = False

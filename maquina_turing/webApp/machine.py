@@ -14,7 +14,7 @@
         self.input_alphabet = input_alphabet
         self.tape_alphabet = tape_alphabet
         self.initial_state = initial_state
-        self.final_state = final_state
+        self.final_states = final_state
         self.blank_sym = blank_sym
         self.transitions = transitions
         self.current = initial_state
@@ -30,7 +30,7 @@
         print(f"[*] Alfabeto: {self.input_alphabet}")
         print(f"[*] Cinta: {self.tape_alphabet}")
         print(f"[*] Estado inicial: {self.initial_state}")
-        print(f"[*] Estados aceptación: {self.final_state}")
+        print(f"[*] Estados aceptación: {self.final_states}")
         print(f"[*] Blank: {self.blank_sym}")
         print(f"[*] Transiciones: {self.transitions}")
         print(f"[*] Cabezal: {self.head}")
@@ -46,8 +46,10 @@
             self.head = (x - 1, y)
         elif move in ('U', 'N'):
             self.head = (x, y - 1)
-        elif move in ('D', 'S'):
+        elif move in ('D',):
             self.head = (x, y + 1)
+        elif move in ('S', '-'):
+            self.head = (x, y)
 
     def step(self):
         symbol = self.leer_cinta()

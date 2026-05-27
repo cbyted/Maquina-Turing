@@ -51,9 +51,12 @@ def parsing_mt_file(selected_file):
                     print("[+] Exito: El archivo se cargó correctamente")
 
                     for line in mt:
+                        line = line.strip()
+                        if not line:
+                            continue
                         if in_transitions:
-                            parse_transition(line, transitions)    
-                        
+                            parse_transition(line, transitions)
+
                         if "Estados" in line:
                             states = general_parsing(line)
                             if states is not None:
@@ -89,8 +92,7 @@ def parsing_mt_file(selected_file):
                             if blank_sym is not None:
                                 parsed_file["blank_symbol"] = blank_sym
                             else:
-                                raise Exception("No se encontraron edetallestados finales")
-                                raise Exception("No se encontraron edetallestados finales")
+                                raise Exception("No se encontró el símbolo blanco")
                         elif "Transiciones" in line:
                             in_transitions = True 
                     mt.close()    
