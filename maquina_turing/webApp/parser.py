@@ -92,71 +92,16 @@ def parsing_mt_file(selected_file):
                             if blank_sym is not None:
                                 parsed_file["blank_symbol"] = blank_sym
                             else:
-                                raise Exception("No se encontró el símbolo blanco")
+                                raise Exception("No se encontraron edetallestados finales")
                         elif "Transiciones" in line:
                             in_transitions = True 
                     mt.close()    
 
                     parsed_file["transitions"] = transitions
+                    print("[+] Exito: Parsing exitoso!!")
                     return parsed_file
+                
             except FileNotFoundError:
                 print("[!] Error: Archivo no encontrado")
     except Exception as e:
         print(f"[!] Error: {e}")
-
-def show_parsed_file(dictionary):
-    print("\n[*] Resultado del diccionario tras el parsing")
-    for key in dictionary:
-        if key == "transitions":
-            print(f"{key}:")
-            for transition in dictionary[key]:
-                print(f"{transition} : {dictionary[key][transition]}")
-        else:
-            print(f"{key} : {dictionary[key]}")
-
-def main():
-    file_dict = parsing_mt_file("duplicadora-de-unos.mt")
-
-    file_dict = parsing_mt_file("duplicadora-de-unos.mt")
-
-    mt_simulator = TuringMachine(
-        file_dict["states"],
-        file_dict["input_alphabet"],
-        file_dict["tape_alphabet"],
-        file_dict["initial_state"][0],
-        file_dict["final_states"],
-        file_dict["blank_symbol"][0],    
-        file_dict["transitions"],
-        tape="11111"
-    )
-    try:
-        mt_simulator.show_machine()
-
-        print("\n[*] Running the tape:")
-        result = mt_simulator.run()
-        if result == True:
-            print("Accepted")
-        else:
-            print("Rejected")
-
-        print("\nFinal result:")
-        mt_simulator.display_tape()
-    except Exception as e:
-        print(f"{e}")
-    try:
-        mt_simulator.show_machine()
-
-        print("\n[*] Running the tape:")
-        result = mt_simulator.run()
-        if result == True:
-            print("Accepted")
-        else:
-            print("Rejected")
-
-        print("\nFinal result:")
-        mt_simulator.display_tape()
-    except Exception as e:
-        print(f"{e}")
-
-if __name__ == "__main__":
-    main()
