@@ -1,6 +1,5 @@
-﻿#==================================#
-# AUXILIARES PARA MANEJO DE DJANGO #
-#==================================#
+﻿from time import sleep
+
 
 def posicion_a_clave(pos):
     return f"{pos[0]}||{pos[1]}"
@@ -54,11 +53,6 @@ def transiciones_to_list(transiciones):
         })
     return sorted(lista, key=lambda x: (x['from_state'], x['read']))
 
-
-#==============================#
-# CLASE PRINCIPAL DEL PROGRAMA #
-#==============================#
-
 class TuringMachine:
     def __init__(
         self,
@@ -84,7 +78,7 @@ class TuringMachine:
         self.cabezal = (0, 0)
 
         self.pasos = 0
-        self.max_pasos = 500
+        self.max_pasos = 13000
         self.historial = []
 
         self.resultado = '' # Por defecto

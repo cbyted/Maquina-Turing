@@ -119,38 +119,40 @@
     </div>
 
     <div>
-        {% if terminado %}
-            {% if resultado == 'aceptada' %}
-            <div class="result-banner accepted">
-                <div class="result-icon">✓</div>
-                <div>
-                    <div class="result-title">Cadena aceptada</div>
-                    <div class="result-detail">
-                        "{{ cadena_actual }}" pertenece al lenguaje reconocido por esta MT.
-                        ({{ paso_actual }} pasos)
+        {% if is_langtons_ant == 'False' %}
+            {% if terminado %}
+                {% if resultado == 'aceptada' %}
+                <div class="result-banner accepted">
+                    <div class="result-icon">✓</div>
+                    <div>
+                        <div class="result-title">Cadena aceptada</div>
+                        <div class="result-detail">
+                            "{{ cadena_actual }}" pertenece al lenguaje reconocido por esta MT.
+                            ({{ paso_actual }} pasos)
+                        </div>
                     </div>
                 </div>
-            </div>
-            {% elif resultado == 'rechazada' %}
-            <div class="result-banner rejected">
-                <div class="result-icon">✕</div>
-                <div>
-                    <div class="result-title">Cadena rechazada</div>
-                    <div class="result-detail">
-                        "{{ cadena_actual }}" no pertenece al lenguaje. ({{ paso_actual }} pasos)
+                {% elif resultado == 'rechazada' %}
+                <div class="result-banner rejected">
+                    <div class="result-icon">✕</div>
+                    <div>
+                        <div class="result-title">Cadena rechazada</div>
+                        <div class="result-detail">
+                            "{{ cadena_actual }}" no pertenece al lenguaje. ({{ paso_actual }} pasos)
+                        </div>
                     </div>
                 </div>
-            </div>
-            {% elif resultado == 'limite' %}
-            <div class="result-banner limit">
-                <div class="result-icon">⚠</div>
-                <div>
-                    <div class="result-title">Límite de pasos alcanzado</div>
-                    <div class="result-detail">
-                        La MT superó {{ max_pasos }} pasos sin terminar. Posible bucle infinito.
+                {% elif resultado == 'limite' %}
+                <div class="result-banner limit">
+                    <div class="result-icon">⚠</div>
+                    <div>
+                        <div class="result-title">Límite de pasos alcanzado</div>
+                        <div class="result-detail">
+                            La MT superó {{ max_pasos }} pasos sin terminar. Posible bucle infinito.
+                        </div>
                     </div>
                 </div>
-            </div>
+                {% endif %}
             {% endif %}
         {% endif %}
 
@@ -164,13 +166,24 @@
                         <div class="tape-row">
                             {% for celda in fila %}
                             <div class="tape-cell {% if celda.es_cabezal %}active{% endif %}">
-                                {% if celda.es_cabezal %}
-                                    <div class="head-indicator">▼</div>
+                                
+                                <!-- Mi modificación para la hormiga -->
+                                {% if is_langtons_ant %}
+                                    <div class="cell-box {% if celda.simbolo == '1' %}black-cell{% else %}white-cell{% endif %}">
+                                        {% if celda.es_cabezal %}{% endif %}
+                                    </div>
                                 {% else %}
-                                    <div style="height: 16px;"></div>
+                                    {% if celda.es_cabezal %}
+                                        <div class="head-indicator">▼</div>
+                                    {% else %}
+                                        <div style="height: 16px;"></div>
+                                    {% endif %}
+
+                                    <div class="cell-box">
+                                        {{ celda.simbolo }}
+                                    </div>
+                                    <div class="cell-index">{{ celda.x }},{{ celda.y }}</div>
                                 {% endif %}
-                                <div class="cell-box">{{ celda.simbolo }}</div>
-                                <div class="cell-index">{{ celda.x }},{{ celda.y }}</div>
                             </div>
                             {% endfor %}
                         </div>

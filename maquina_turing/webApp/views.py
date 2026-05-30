@@ -10,11 +10,7 @@ from .machine import session_to_transiciones
 from .machine import transiciones_to_session
 from .machine import transiciones_to_list
 
-MAX_PASOS = 500
-
-#-------------------#
-#     HISTORIAL     #
-#-------------------#
+MAX_PASOS = 13000
 
 def _guardar_en_historial(request, maquina, cadena, resultado, pasos):
     historial = request.session.get('historial_ejecuciones', [])
@@ -30,33 +26,12 @@ def historial(request):
     ejecuciones = request.session.get('historial_ejecuciones', [])
     return render(request, 'historial.html', {'ejecuciones': ejecuciones})
 
-#-------------------#
-#     CARGAR MT     #
-#-------------------#
-
 def normalizar_valor(valor):
     if isinstance(valor, list):
         return valor[0]
     return valor
 
-# Limpiar los campos de la maquina de turing anterior
-def limpiar_sim_anterior(request):
-    campos = [
-        'sim_estado',
-        'sim_cinta',
-        'sim_cabezal',
-        'sim_paso',
-        'sim_historial',
-        'sim_terminado',
-        'sim_resultado',
-        'sim_cadena'
-    ]
-
-    for campo in campos:
-        request.session.pop(campo, None)
-
-# Cargar maquina de turing desde un archivo .mt
-def cargar(request):
+def cargar(request):      # GET con máquina ya cargada: mostrar la 7-tupla
     context = {
         'maquina_cargada': request.session.get('maquina_nombre'),
         'mt_data': None,
@@ -67,12 +42,19 @@ def cargar(request):
         if not maquina:
             messages.error(request, 'Debes seleccionar una máquina.')
             return render(request, 'cargar.html', context)
- 
+
+        # Bandera para detectar el .mt de langston y aplicar los estilos correspondientes
+        is_langtons_ant = False
+
+        if maquina == "langtons-ant.mt":
+            is_langtons_ant = True
+
         parsed = parsing_mt_file(maquina)
         if parsed is None:
             messages.error(request, f'No se pudo cargar "{maquina}". Verifica el archivo .mt.')
             return render(request, 'cargar.html', context)
  
+        request.session['is_langtons_ant']  = is_langtons_ant 
         request.session['maquina_nombre']   = maquina
         request.session['mt_states']        = parsed['states']
         request.session['mt_input_alpha']   = parsed['input_alphabet']
@@ -82,8 +64,8 @@ def cargar(request):
         request.session['mt_blank']         = normalizar_valor(parsed['blank_symbol'])
         request.session['mt_transiciones']  = transiciones_to_session(parsed['transitions'])
         
-        limpiar_sim_anterior(request)
- 
+        request.session.pop('tm', None)
+
         messages.success(request, f'Máquina "{maquina}" cargada correctamente.')
         context['maquina_cargada'] = maquina
  
@@ -99,7 +81,7 @@ def cargar(request):
         }
  
     elif request.session.get('maquina_nombre'):
-        # GET con máquina ya cargada: mostrar la 7-tupla
+  
         trans_raw = request.session.get('mt_transiciones', {})
         transiciones = session_to_transiciones(trans_raw)
         context['mt_data'] = {
@@ -114,12 +96,9 @@ def cargar(request):
  
     return render(request, 'cargar.html', context)
 
-#--------------------#
-#     SIMULACION     #
-#--------------------#
-
 def init_context(maquina_nombre):
     context = {
+        'is_langtons_ant': False,
         'maquina_nombre':  maquina_nombre,
         'simulacion_activa': False,
         'terminado':       False,
@@ -134,7 +113,6 @@ def init_context(maquina_nombre):
     }
     return context
 
-# La maquina aún no existe
 def new_machine_from_session(request, maquina, cadena, transiciones):    
     tm = TuringMachine(
         nombre_mt=maquina,
@@ -152,7 +130,10 @@ def new_machine_from_session(request, maquina, cadena, transiciones):
 def simular(request):
     maquina_nombre = request.session.get('maquina_nombre')
     context = init_context(maquina_nombre)
-    #request.session.flush()
+    
+    # Para detectar cuando se usa langston ant
+    context['is_langtons_ant'] = request.session.get('is_langtons_ant', False)
+
     if not maquina_nombre:
         return render(request, 'simular.html', context)
  
@@ -224,9 +205,7 @@ def simular(request):
     sim_activa = 'tm' in request.session
     if sim_activa:
 
-        tm = TuringMachine.get_machine_from_session(
-            request.session['tm']
-        )
+        tm = TuringMachine.get_machine_from_session(request.session['tm'])
 
         context.update({
             'simulacion_activa': True,

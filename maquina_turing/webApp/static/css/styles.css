@@ -138,11 +138,14 @@ body {
 }
 
 .card {
+    max-width: 100vh;
+    margin-top: 1rem;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 1.5rem;
     transition: border-color var(--transition);
+    overflow-x: auto; 
 }
 
 .card:hover {
@@ -483,21 +486,22 @@ select.form-control {
 }
 
 .tape-wrapper {
-        overflow: auto;
-        padding-bottom: 0.5rem;
-    }
+    overflow: auto;
+    padding-bottom: 0.5rem;
+}
 
-    .tape-grid {
-        display: inline-flex;
-        flex-direction: column;
-        gap: 4px;
-        padding: 0.5rem 0;
-    }
+.tape-grid {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0.5rem 0;
+}
 
-    .tape-row {
-        display: flex;
-        gap: 4px;
-        justify-content: center;
+.tape-row {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
 
 .tape-cell {
     display: flex;
@@ -522,6 +526,7 @@ select.form-control {
     transition: all var(--transition);
 }
 
+/* Celda activa */
 .tape-cell.active .cell-box {
     border-color: var(--accent-blue);
     background: var(--tape-active-bg);
@@ -533,6 +538,29 @@ select.form-control {
     font-size: 0.6rem;
     color: var(--text-muted);
     font-family: var(--font-mono);
+}
+
+/* Celdas poder visualizar para la hormiga de langston */
+
+.white-cell {
+    width: 1px !important;
+    height: 1px !important;
+    background-color: #ffffff ;
+    color: transparent;
+    padding: 0;
+    border: 1px solid #ccc;
+    margin: 0;
+}
+
+.black-cell {
+    width: 1px !important;
+    height: 1px !important;
+    background-color: #000000 ;
+    color: transparent;
+    border: 1px solid #333;
+    padding: 0;
+    margin: 0;
+    gap: 2;
 }
 
 .head-indicator {
@@ -670,7 +698,6 @@ select.form-control {
     background: var(--border);
     margin: 1.5rem 0;
 }
-
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-primary); }
