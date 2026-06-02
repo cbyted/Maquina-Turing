@@ -45,7 +45,6 @@ def cargar(request):      # GET con máquina ya cargada: mostrar la 7-tupla
 
         # Bandera para detectar el .mt de langston y aplicar los estilos correspondientes
         is_langtons_ant = False
-
         if maquina == "langtons-ant.mt":
             is_langtons_ant = True
 
