@@ -169,7 +169,6 @@
                             {% for celda in fila %}
                             <div class="tape-cell {% if celda.es_cabezal %}active{% endif %}">
                                 
-                                <!-- Mi modificación para la hormiga -->
                                 {% if is_langtons_ant %}
                                     <div class="cell-box {% if celda.simbolo == '1' %}black-cell{% else %}white-cell{% endif %}">
                                         {% if celda.es_cabezal %}{% endif %}

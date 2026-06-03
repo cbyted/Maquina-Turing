@@ -81,7 +81,7 @@ class TuringMachine:
         self.max_pasos = 13000
         self.historial = []
 
-        self.resultado = '' # Por defecto
+        self.resultado = '' 
         self.terminado = False
 
         self.cadena = cinta or ''
@@ -90,7 +90,6 @@ class TuringMachine:
             for x, symbol in enumerate(cinta):
                 self.cinta[(x, 0)] = symbol
     
-    # Reiniciar la maquina
     def reset(self):
         self.estado_actual = self.estado_inicial
         self.cabezal = (0, 0)
@@ -103,7 +102,6 @@ class TuringMachine:
             self.cinta[(x, 0)] = symbol
         self.cadena = None
 
-    # Cinvertir campso de la maquina a un diccionario
     def to_session(self):
         return {
             'nombre_mt': self.nombre_mt,
@@ -124,7 +122,6 @@ class TuringMachine:
             'cadena': self.cadena,
         }
 
-    # La maquina ya existe
     @classmethod
     def get_machine_from_session(cls, data):
         tm = cls(
@@ -148,15 +145,9 @@ class TuringMachine:
         tm.resultado = data['resultado']
         return tm
 
-    #===================================#
-    # FUNCIONAMIENTO BASE DE LA MAQUINA #
-    #===================================#
-
-    # Leer un simbolo de la cinta
     def leer_cinta(self):
         return self.cinta.get(self.cabezal, self.simbolo_vacio)
 
-    # Mostrar la cinta
     def display_cinta(self, ventana=4):
         if self.cinta:
             xs = [pos[0] for pos in self.cinta.keys()] + [self.cabezal[0]]
@@ -231,13 +222,7 @@ class TuringMachine:
     def run(self):
         while not self.terminado:
             self.step()
-
-
-    #==========================#  
-    # HISTORIAL DE EJECUCIONES #
-    #==========================#
-
-    # Devolver datos para guarar en el historial de ejecuciones completadas
+            
     def get_resumen_ejecucion(self):
         if self.terminado:
             resultado_final = {
@@ -250,6 +235,3 @@ class TuringMachine:
         else:
             print("[!] La simulación aún no ha terminado")
             return None 
-    
-    
-    
